@@ -9,6 +9,7 @@ import (
 	libcontext "github.com/Diaphteiros/kw/pluginlib/pkg/context"
 	"github.com/Diaphteiros/kw/pluginlib/pkg/debug"
 	libutils "github.com/Diaphteiros/kw/pluginlib/pkg/utils"
+
 	"github.com/Diaphteiros/kw_kind/cmd/version"
 	"github.com/Diaphteiros/kw_kind/pkg/config"
 	"github.com/Diaphteiros/kw_kind/pkg/state"
@@ -96,8 +97,8 @@ If the flag is set, the cluster name can be omitted to reload the current cluste
 		// run command
 		debug.Debug("starting kind execution")
 		if err := bin.Run(); err != nil {
-			outBuffer.Flush(cmd.OutOrStdout())
-			errBuffer.Flush(cmd.ErrOrStderr())
+			_ = outBuffer.Flush(cmd.OutOrStdout())
+			_ = errBuffer.Flush(cmd.ErrOrStderr())
 			libutils.Fatal(1, "error running kind: %w\n", err)
 		}
 		debug.Debug("finished kind execution")

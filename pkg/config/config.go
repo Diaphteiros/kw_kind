@@ -50,7 +50,9 @@ func LoadFromBytes(data []byte) (*KindConfig, error) {
 	} else {
 		debug.Debug("No kw_kind config provided, using default values")
 	}
-	cfg.Default()
+	if err := cfg.Default(); err != nil {
+		return nil, fmt.Errorf("error setting default values for kw_kind config: %w", err)
+	}
 	if err := cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("error validating kw_kind config: %w", err)
 	}

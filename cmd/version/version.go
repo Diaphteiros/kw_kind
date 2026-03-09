@@ -3,8 +3,9 @@ package version
 import (
 	"encoding/json"
 
-	staticversion "github.com/Diaphteiros/kw_kind/pkg/version"
 	"github.com/spf13/cobra"
+
+	staticversion "github.com/Diaphteiros/kw_kind/pkg/version"
 
 	libutils "github.com/Diaphteiros/kw/pluginlib/pkg/utils"
 	"sigs.k8s.io/yaml"
