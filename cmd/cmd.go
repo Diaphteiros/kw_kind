@@ -34,7 +34,7 @@ If the flag is set, the cluster name can be omitted to reload the current cluste
 		clusterName := ""
 		if len(args) == 0 {
 			if !reload {
-				libutils.Fatal(1, "cluster name needs to be provided if --reload is not set")
+				libutils.Fatal(1, "cluster name needs to be provided if --reload is not set\n")
 			}
 		} else {
 			clusterName = args[0]
@@ -44,13 +44,13 @@ If the flag is set, the cluster name can be omitted to reload the current cluste
 		debug.Debug("Loading kubeswitcher context from environment")
 		con, err := libcontext.NewContextFromEnv()
 		if err != nil {
-			libutils.Fatal(1, "error creating kubeswitcher context from environment (this is a plugin, did you run it as standalone?): %w", err)
+			libutils.Fatal(1, "error creating kubeswitcher context from environment (this is a plugin, did you run it as standalone?): %w\n", err)
 		}
 		debug.Debug("Kubeswitcher context loaded:\n%s", con.String())
 		debug.Debug("Loading plugin configuration")
 		cfg, err := config.LoadFromBytes([]byte(con.PluginConfig))
 		if err != nil {
-			libutils.Fatal(1, "error loading plugin configuration: %w", err)
+			libutils.Fatal(1, "error loading plugin configuration: %w\n", err)
 		}
 		debug.Debug("Plugin configuration loaded:\n%s", cfg.String())
 
@@ -58,7 +58,7 @@ If the flag is set, the cluster name can be omitted to reload the current cluste
 		kState := &state.KindState{}
 		ok, err := kState.Load(con)
 		if err != nil {
-			libutils.Fatal(1, "error loading plugin state: %w", err)
+			libutils.Fatal(1, "error loading plugin state: %w\n", err)
 		}
 		if ok {
 			debug.Debug("Plugin state loaded:\n%s", kState.String())
@@ -67,14 +67,14 @@ If the flag is set, the cluster name can be omitted to reload the current cluste
 			} else if clusterName == kState.ClusterName && !reload {
 				debug.Debug("Cluster name matches current cluster name and --reload flag is not set. Writing notification and exiting.")
 				if err := con.WriteNotificationMessage(kState.Notification()); err != nil {
-					libutils.Fatal(1, "%w", err)
+					libutils.Fatal(1, "%w\n", err)
 				}
 				return
 			}
 		} else {
 			debug.Debug("Unable to load plugin state from kubeswitcher (either not found or current state is from a different plugin)")
 			if clusterName == "" {
-				libutils.Fatal(1, "Unable to reload kind cluster kubeconfig, because the current kubeconfig was not set via this subcommand.\nEither provide a kind cluster name or switch to a kind cluster first.")
+				libutils.Fatal(1, "Unable to reload kind cluster kubeconfig, because the current kubeconfig was not set via this subcommand.\nEither provide a kind cluster name or switch to a kind cluster first.\n")
 			}
 		}
 
@@ -107,13 +107,13 @@ If the flag is set, the cluster name can be omitted to reload the current cluste
 		// update state
 		kState.ClusterName = clusterName
 		if err := con.WriteKubeconfig(kcfgData, kState.Notification()); err != nil {
-			libutils.Fatal(1, "%w", err)
+			libutils.Fatal(1, "%w\n", err)
 		}
 		if err := con.WriteId(kState.Id(con.CurrentPluginName)); err != nil {
-			libutils.Fatal(1, "%w", err)
+			libutils.Fatal(1, "%w\n", err)
 		}
 		if err := con.WritePluginState(kState); err != nil {
-			libutils.Fatal(1, "%w", err)
+			libutils.Fatal(1, "%w\n", err)
 		}
 	},
 }

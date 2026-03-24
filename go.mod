@@ -3,7 +3,7 @@ module github.com/Diaphteiros/kw_kind
 go 1.25.7
 
 require (
-	github.com/Diaphteiros/kw/pluginlib v1.0.0
+	github.com/Diaphteiros/kw/pluginlib v1.1.0
 	github.com/spf13/cobra v1.10.1
 	k8s.io/apimachinery v0.35.0
 	sigs.k8s.io/yaml v1.6.0
