@@ -3,11 +3,13 @@ package cmd
 import (
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	libcontext "github.com/Diaphteiros/kw/pluginlib/pkg/context"
 	"github.com/Diaphteiros/kw/pluginlib/pkg/debug"
+	"github.com/Diaphteiros/kw/pluginlib/pkg/selector"
 	libutils "github.com/Diaphteiros/kw/pluginlib/pkg/utils"
 
 	"github.com/Diaphteiros/kw_kind/cmd/version"
@@ -28,15 +30,13 @@ This command sets the kubeconfig to the output of 'kind get kubeconfg --name <na
 No-op if the current kubeconfig is already set to the kubeconfig of the specified kind cluster.
 
 The '--reload' flag causes the kubeconfig to be loaded even if it is the currently targeted cluster.
-If the flag is set, the cluster name can be omitted to reload the current cluster's kubeconfig. This results in an error if the currently targeted kubeconfig was not set via this command.`,
+If the flag is set, the cluster name can be omitted to reload the current cluster's kubeconfig. This results in an error if the currently targeted kubeconfig was not set via this command.
+
+If neither a cluster name, nor the '--reload' flag is set, the user will be prompted to select one of the known kind clusters via a fuzzy selector.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// validate arguments
 		clusterName := ""
-		if len(args) == 0 {
-			if !reload {
-				libutils.Fatal(1, "cluster name needs to be provided if --reload is not set\n")
-			}
-		} else {
+		if len(args) > 0 {
 			clusterName = args[0]
 		}
 
@@ -62,7 +62,7 @@ If the flag is set, the cluster name can be omitted to reload the current cluste
 		}
 		if ok {
 			debug.Debug("Plugin state loaded:\n%s", kState.String())
-			if clusterName == "" {
+			if clusterName == "" && reload {
 				clusterName = kState.ClusterName
 			} else if clusterName == kState.ClusterName && !reload {
 				debug.Debug("Cluster name matches current cluster name and --reload flag is not set. Writing notification and exiting.")
@@ -73,9 +73,47 @@ If the flag is set, the cluster name can be omitted to reload the current cluste
 			}
 		} else {
 			debug.Debug("Unable to load plugin state from kubeswitcher (either not found or current state is from a different plugin)")
-			if clusterName == "" {
+			if clusterName == "" && reload {
 				libutils.Fatal(1, "Unable to reload kind cluster kubeconfig, because the current kubeconfig was not set via this subcommand.\nEither provide a kind cluster name or switch to a kind cluster first.\n")
 			}
+		}
+
+		if clusterName == "" && !reload {
+			// prompt for cluster name
+			// prepare kind execution
+			kindArgs := []string{"get", "clusters"}
+			bin := exec.Command(cfg.Binary, kindArgs...)
+			// build command environment
+			if bin.Env == nil {
+				bin.Env = []string{}
+			}
+			bin.Env = append(bin.Env, os.Environ()...) // add current env vars
+
+			// set channels
+			errBuffer := libutils.NewWriteBuffer()
+			outBuffer := libutils.NewWriteBuffer()
+			bin.Stderr = errBuffer
+			bin.Stdout = outBuffer
+			bin.Stdin = cmd.InOrStdin()
+
+			// run command
+			debug.Debug("starting kind execution for prompt data")
+			if err := bin.Run(); err != nil {
+				_ = outBuffer.Flush(cmd.OutOrStdout())
+				_ = errBuffer.Flush(cmd.ErrOrStderr())
+				libutils.Fatal(1, "error running kind: %w\n", err)
+			}
+			debug.Debug("finished kind execution for prompt data")
+
+			kindClusters := strings.Split(outBuffer.FlushToString(), "\n")
+
+			_, clusterName, _ = selector.New[string]().
+				WithPrompt("Select kind cluster: ").
+				WithFatalOnAbort("No cluster selected.").
+				WithFatalOnError("error selecting cluster: %w").
+				WithSortFunc(selector.Invert(strings.Compare)).
+				From(kindClusters, selector.Identity).
+				Select()
 		}
 
 		// prepare kind execution

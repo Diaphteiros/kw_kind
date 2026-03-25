@@ -38,3 +38,5 @@ Examples (assuming the plugin was registered with name `kind`):
 - `kw kind --reload`
   - Reloads the kubeconfig for the currently targeted kind cluster.
   - Fails if the current kubeconfig was not set via `kw kind`.
+- `kw kind`
+  - Prompts the user to choose one of the existing kind clusters.
