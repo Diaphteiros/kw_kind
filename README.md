@@ -4,11 +4,15 @@ This is a plugin for the [kubeswitcher](https://github.com/Diaphteiros/kw) tool 
 
 ## Installation
 
-To install the KubeSwitcher plugin, simply run the following command
+### Homebrew
+
 ```shell
-go install github.com/Diaphteiros/kw_kind@latest
+brew tap diaphteiros/kubeswitcher
+brew install kw_kind
 ```
-or clone the repository and run
+
+### Manual Build
+Clone the repository (including the submodule) and run
 ```shell
 task install
 ```
